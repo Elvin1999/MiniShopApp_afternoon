@@ -1,24 +1,43 @@
+using Microsoft.EntityFrameworkCore;
+using OrderService.API.Data;
+using OrderService.API.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+builder.Services.AddDbContext<OrderDbContext>(options =>
+{
+    options.UseSqlite(
+        builder.Configuration.GetConnectionString(
+            "DefaultConnection"));
+});
+
+builder.Services.AddHttpClient<
+    IProductServiceClient,
+    ProductServiceClient>(client =>
+    {
+        client.BaseAddress = new Uri(
+            builder.Configuration[
+                "Services:ProductService"]!);
+    });
+
+builder.Services.AddHttpClient<
+    INotificationServiceClient,
+    NotificationServiceClient>(client =>
+    {
+        client.BaseAddress = new Uri(
+            builder.Configuration[
+                "Services:NotificationService"]!);
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.MapControllers();
 
